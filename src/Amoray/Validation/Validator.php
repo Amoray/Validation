@@ -1,6 +1,6 @@
 <?php
 
-namespace Amelia\Validation;
+namespace Amoray\Validation;
 
 /**
 * Validation Class
@@ -50,11 +50,11 @@ class Validator
 	{
 		$value = $_POST[$key];
 
-		if ($value == $match) 
+		if ($value == $match)
 		{
 			$this->setConditional(true);
 		}
-		elseif (is_null($match) && !empty($value)) 
+		elseif (is_null($match) && !empty($value))
 		{
 			$this->setConditional(true);
 		}
@@ -76,7 +76,7 @@ class Validator
 	private function setConditional($switch = true)
 	{
 		// Stop processing additional checks
-		// 
+		//
 		list($test, $key) = $this->end();
 
 		$this->checklist[$key]['condition'] = $switch;
@@ -90,25 +90,46 @@ class Validator
 		return $this->checklist[$key]['condition'];
 	}
 
+	public function callback($func, array $params = [])
+	{
+		list($test, $key) = $this->end();
+
+		$params = array_merge([$test, $key], $params);
+
+		if (!is_callable($func))
+		{
+			throw new \Exception('$func not callable');
+		}
+
+		$return = call_user_func_array($func, $params);
+
+		if ($return instanceof \Exception)
+		{
+			$this->fail($return);
+		}
+
+		return $this;
+	}
+
 	public function required()
 	{
 		list($test, $key) = $this->end();
 
-		if ($this->conditional($key)) 
+		if ($this->conditional($key))
 		{
-			if (is_object($test) && empty($test)) 
+			if (is_object($test) && empty($test))
 			{
 				$this->fail(new \Exception("Required field"));
 			}
-			elseif (is_array($test) && empty($test)) 
+			elseif (is_array($test) && empty($test))
 			{
 				$this->fail(new \Exception("Required field"));
 			}
-			elseif (is_string($test) && 0 === strlen($test)) 
+			elseif (is_string($test) && 0 === strlen($test))
 			{
 				$this->fail(new \Exception("Required field"));
 			}
-			elseif (is_numeric($test) && is_null($test)) 
+			elseif (is_numeric($test) && is_null($test))
 			{
 				$this->fail(new \Exception("Required field"));
 			}
@@ -117,34 +138,22 @@ class Validator
 		return $this;
 	}
 
-	public function phone_max($length)
+	public function phone($min, $max)
 	{
 		list($test, $key) = $this->end();
 
-		if ($this->conditional($key)) 
+		if ($this->conditional($key))
 		{
-			$test = preg_replace("/[^\+0-9]/", "", $test);
+			$count = strlen(preg_replace("/[^0-9]/", "", $test));
+			$check = preg_replace("/[^\+0-9]/", "", $test);
 
-			if (strlen($test) > $length) 
+			if ($count > $max)
 			{
-				$this->fail(new \Exception("Must be {$length} digits or more."));
+				$this->fail(new \Exception("Must be {$max} digits or fewer."));
 			}
-		}
-
-		return $this;
-	}
-
-	public function phone_min($length)
-	{
-		list($test, $key) = $this->end();
-
-		if ($this->conditional($key)) 
-		{
-			$test = preg_replace("/[^\+0-9]/", "", $test);
-
-			if (strlen($test) < $length) 
+			elseif ($count < $min)
 			{
-				$this->fail(new \Exception("Must be {$length} digits or more."));
+				$this->fail(new \Exception("Must be {$min} digits or more."));
 			}
 		}
 
@@ -155,9 +164,10 @@ class Validator
 	{
 		list($test, $key) = $this->end();
 
-		if ($this->conditional($key)) 
+		if ($this->conditional($key))
 		{
-			if (strlen($test) > $length) 
+
+			if (strlen($test) > $length)
 			{
 				$this->fail(new \Exception("This field must be {$length} characters or fewer."));
 			}
@@ -170,9 +180,9 @@ class Validator
 	{
 		list($test, $key) = $this->end();
 
-		if ($this->conditional($key)) 
+		if ($this->conditional($key))
 		{
-			if (strlen($test) < $length) 
+			if (strlen($test) < $length)
 			{
 				$this->fail(new \Exception("This field must be {$length} characters or more."));
 			}
@@ -181,13 +191,13 @@ class Validator
 		return $this;
 	}
 
-	public function greater($value = 0)
+	public function more($value = 0)
 	{
 		list($test, $key) = $this->end();
 
-		if ($this->conditional($key)) 
+		if ($this->conditional($key))
 		{
-			if ($test < $value) 
+			if ($test < $value)
 			{
 				$this->fail(new \Exception("This field must be {$value} or greater."));
 			}
@@ -196,15 +206,15 @@ class Validator
 		return $this;
 	}
 
-	public function lesser($value = 0)
+	public function less($value = 0)
 	{
 		list($test, $key) = $this->end();
 
-		if ($this->conditional($key)) 
+		if ($this->conditional($key))
 		{
-			if ($test > $value) 
+			if ($test > $value)
 			{
-				$this->fail(new \Exception("This field must be {$value} or fewer."));
+				$this->fail(new \Exception("This field must be {$value} or lesser."));
 			}
 		}
 
@@ -215,9 +225,9 @@ class Validator
 	{
 		list($test, $key) = $this->end();
 
-		if ($this->conditional($key)) 
+		if ($this->conditional($key))
 		{
-			if (false === is_numeric($test)) 
+			if (false === is_numeric($test))
 			{
 				$this->fail(new \Exception('This field must be numeric'));
 			}
@@ -230,9 +240,9 @@ class Validator
 	{
 		list($test, $key) = $this->end();
 
-		if ($this->conditional($key)) 
+		if ($this->conditional($key))
 		{
-			if (false === strpos($test, '@')) 
+			if (false === strpos($test, '@'))
 			{
 				$this->fail(new \Exception('Not a valid email address'));
 			}
@@ -241,24 +251,58 @@ class Validator
 		return $this;
 	}
 
-	public function website()
+	public function uri()
 	{
 		list($test, $key) = $this->end();
 
-		if ($this->conditional($key)) 
+		if ($this->conditional($key))
 		{
-			list($scheme, $hierarchy) = $test->toValidator();
+			if (false === strpos($test, '://'))
+			{
+				$test = 'http://'. $test;
+			}
+			$scheme = parse_url($test, PHP_URL_SCHEME); //Scheme
+			$username = parse_url($test, PHP_URL_USER); //Authority
+			$userpass = parse_url($test, PHP_URL_PASS); //Authority
+			$hostname = parse_url($test, PHP_URL_HOST); //Authority
+			$port = parse_url($test, PHP_URL_PORT); //Authority
+			$path = parse_url($test, PHP_URL_PATH); //Hierarchy
+			// Break path and extract filename and extension
+			$filename = preg_replace('/^(.*?)\b((\w+\b)\.(\w+\b))?$/', '${3}', $path);
+			$extension = preg_replace('/^(.*?)\b((\w+\b)\.(\w+\b))?$/', '${4}', $path);
 
-			if (empty($scheme)) 
+			// Build the Authority
+			$authority = $hostname;
+
+			// append the port if available
+			if (!empty($port))
+			{
+				$authority .= ":{$port}";
+			}
+			// prepend the username and password if required
+			if (!empty($username) && !empty($userpass))
+			{
+				$authority = "{$username}:{$userpass}@". $authority;
+			}
+			elseif (!empty($username))
+			{
+				$authority = "{$username}@". $authority;
+			}
+
+			$hierarchy = "{$authority}{$path}";
+
+			if (empty($scheme))
 			{
 				$this->fail(new \Exception('Missing scheme ( I.E. http:// )'));
 			}
 
-			if (empty($hierarchy)) 
+			if (empty($hierarchy))
 			{
 				$this->fail(new \Exception('Invalid formatting.'));
 			}
 		}
+
+		return $this;
 	}
 
 	public function success()
@@ -268,7 +312,7 @@ class Validator
 
 	public function checklist($key = null)
 	{
-		if (array_key_exists($key, $this->checklist)) 
+		if (array_key_exists($key, $this->checklist))
 		{
 			return $this->checklist[$key];
 		}

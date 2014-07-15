@@ -32,14 +32,14 @@ You can also chain, because who doesn't like chaining
 
 Some validations can have parameters too.
 
-    $validate('phone_number')->required()->phone_min(7)->phone_max(10); //Phone number is required and must be between 7 and 10 digits in length.
+    $validate('phone_number')->required()->phone(7,10); //Phone number is required and must be between 7 and 10 digits in length.
 
-    $validate('items', $item_count)->required()->greater(5); //Item count is required and must be greater than 5
+    $validate('items', $item_count)->required()->more(5); //Item count is required and must be greater than 5
 
 You may want to stop a validation if a condition is false
 
     $validate('membership')->required()->condition( $is_gold_membership )->verify_gold();
-    // membership is required, if member is gold, verify gold. 
+    // membership is required, if member is gold, verify gold.
 
 To check if you validation was successful or not
 
